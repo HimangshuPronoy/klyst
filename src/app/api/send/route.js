@@ -1,10 +1,12 @@
 import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
 
 export async function POST(request) {
   try {
@@ -30,7 +32,7 @@ export async function POST(request) {
     if (campaign.scheduled_at) {
       const scheduledTime = new Date(campaign.scheduled_at);
       if (scheduledTime > new Date()) {
-        await supabase.from('campaigns').update({ status: 'scheduled' }).eq('id', campaign_id);
+        await getSupabaseAdmin().from('campaigns').update({ status: 'scheduled' }).eq('id', campaign_id);
         return Response.json({
           success: true,
           scheduled: true,
@@ -90,7 +92,7 @@ export async function POST(request) {
     });
 
     // 6. Update campaign status to active
-    await supabase.from('campaigns').update({ status: 'active' }).eq('id', campaign_id);
+    await getSupabaseAdmin().from('campaigns').update({ status: 'active' }).eq('id', campaign_id);
 
     // 7. Send first email step to all active leads
     const steps = campaign.steps || [];
@@ -133,7 +135,7 @@ export async function POST(request) {
           },
         });
 
-        await supabase.from('campaign_sends').insert({
+        await getSupabaseAdmin().from('campaign_sends').insert({
           campaign_id, lead_id: lead.id, step_index: 0,
           status: 'sent', sent_at: new Date().toISOString(), user_id,
         });
@@ -143,7 +145,7 @@ export async function POST(request) {
         failed++;
         errors.push({ email: lead.email, error: err.message });
 
-        await supabase.from('campaign_sends').insert({
+        await getSupabaseAdmin().from('campaign_sends').insert({
           campaign_id, lead_id: lead.id, step_index: 0,
           status: 'bounced', sent_at: new Date().toISOString(), user_id,
         });
@@ -152,7 +154,7 @@ export async function POST(request) {
 
     // 8. Update campaign status
     const finalStatus = failed === activeLeads.length ? 'failed' : 'completed';
-    await supabase.from('campaigns').update({ status: finalStatus }).eq('id', campaign_id);
+    await getSupabaseAdmin().from('campaigns').update({ status: finalStatus }).eq('id', campaign_id);
 
     return Response.json({
       success: true,

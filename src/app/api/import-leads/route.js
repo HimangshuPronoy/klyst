@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
 
 export async function POST(request) {
   try {
@@ -82,7 +84,7 @@ export async function POST(request) {
     let imported = 0;
     for (let i = 0; i < leads.length; i += 500) {
       const batch = leads.slice(i, i + 500);
-      const { error } = await supabase.from('leads').insert(batch);
+      const { error } = await getSupabaseAdmin().from('leads').insert(batch);
       if (!error) imported += batch.length;
     }
 

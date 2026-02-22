@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -17,7 +19,7 @@ export async function GET(request) {
   }
 
   // Record unsubscribe
-  await supabase.from('unsubscribes').upsert(
+  await getSupabaseAdmin().from('unsubscribes').upsert(
     { user_id: uid, email: email.toLowerCase() },
     { onConflict: 'user_id,email' }
   );

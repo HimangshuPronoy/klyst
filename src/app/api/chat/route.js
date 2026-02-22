@@ -1,10 +1,12 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
 
 export async function POST(request) {
   try {
@@ -28,12 +30,12 @@ export async function POST(request) {
       { data: prospects },
       { data: leads },
     ] = await Promise.all([
-      supabase.from('campaigns').select('id, name, status, created_at, steps, schedule').eq('user_id', user_id),
-      supabase.from('campaign_sends').select('status, sent_at, campaign_id').eq('user_id', user_id),
-      supabase.from('email_accounts').select('email, provider, health, warmup_enabled, daily_limit, sent_today').eq('user_id', user_id),
-      supabase.from('lead_lists').select('id, name, created_at').eq('user_id', user_id),
-      supabase.from('prospects').select('first_name, last_name, company, stage, deal_value, email, last_contacted_at').eq('user_id', user_id),
-      supabase.from('leads').select('name, email, company, status, list_id').eq('user_id', user_id).limit(100),
+      getSupabaseAdmin().from('campaigns').select('id, name, status, created_at, steps, schedule').eq('user_id', user_id),
+      getSupabaseAdmin().from('campaign_sends').select('status, sent_at, campaign_id').eq('user_id', user_id),
+      getSupabaseAdmin().from('email_accounts').select('email, provider, health, warmup_enabled, daily_limit, sent_today').eq('user_id', user_id),
+      getSupabaseAdmin().from('lead_lists').select('id, name, created_at').eq('user_id', user_id),
+      getSupabaseAdmin().from('prospects').select('first_name, last_name, company, stage, deal_value, email, last_contacted_at').eq('user_id', user_id),
+      getSupabaseAdmin().from('leads').select('name, email, company, status, list_id').eq('user_id', user_id).limit(100),
     ]);
 
     // Build summary stats
