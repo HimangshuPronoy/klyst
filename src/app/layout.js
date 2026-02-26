@@ -1,21 +1,15 @@
-import './globals.css';
-import AuthProvider from '@/components/AuthProvider';
-import AppShell from '@/components/AppShell';
+import "./globals.css";
 
 export const metadata = {
-  title: 'Kylst — Cold Email Platform',
+  title: 'Klyst — AI Ad Creative & Insights Platform',
   description:
-    'Professional cold emailing software with inbox warm-up, campaign automation, and advanced analytics.',
+    'Chat with AI to create, iterate on, and analyze ad creatives for your performance marketing campaigns.',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        <AuthProvider>
-          <AppShell>{children}</AppShell>
-        </AuthProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
