@@ -71,20 +71,25 @@ export default function WorkspaceLayout({ children }) {
         {/* Global Navigation */}
         <nav style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {[
-             { name: 'Meta Ad Library', active: true },
-             { name: 'TikTok Creative Center', active: false },
-             { name: 'My Brand Assets', active: false }
+             { name: 'Meta Ad Library', active: true, comingSoon: false },
+             { name: 'TikTok Creative Center', active: false, comingSoon: true },
+             { name: 'My Brand Assets', active: false, comingSoon: true }
           ].map((item, i) => (
              <div key={i} style={{
-               padding: '10px 14px', borderRadius: 10, cursor: 'pointer',
+               padding: '10px 14px', borderRadius: 10, cursor: item.comingSoon ? 'default' : 'pointer',
                backgroundColor: item.active ? 'rgba(255,255,255,0.05)' : 'transparent',
-               color: item.active ? '#fff' : '#a1a1aa',
+               color: item.active ? '#fff' : '#71717a',
                fontSize: 14, fontWeight: 500,
                transition: 'all 0.2s',
-               border: item.active ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent'
-             }} onMouseOver={!item.active ? e => e.currentTarget.style.color = '#fff' : undefined} 
-                onMouseOut={!item.active ? e => e.currentTarget.style.color = '#a1a1aa' : undefined}>
-                {item.name}
+               border: item.active ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent',
+               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+               opacity: item.comingSoon ? 0.5 : 1
+             }} onMouseOver={!item.active && !item.comingSoon ? e => e.currentTarget.style.color = '#fff' : undefined} 
+                onMouseOut={!item.active && !item.comingSoon ? e => e.currentTarget.style.color = '#a1a1aa' : undefined}>
+                <span>{item.name}</span>
+                {item.comingSoon && (
+                  <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.08)', color: '#71717a', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Soon</span>
+                )}
              </div>
           ))}
         </nav>
@@ -101,15 +106,16 @@ export default function WorkspaceLayout({ children }) {
            )}
            {trackedBrands.map((item, i) => (
               <div key={i} style={{
-                padding: '8px 14px', borderRadius: 8, cursor: 'pointer',
+                padding: '8px 14px', borderRadius: 8,
                 color: '#a1a1aa', fontSize: 13,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 transition: 'color 0.2s'
-              }} onMouseOver={e => e.currentTarget.style.color = '#fff'} onMouseOut={e => e.currentTarget.style.color = '#a1a1aa'}>
+              }}>
                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                    <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#10b981' }} />
                    {item.brand}
                  </span>
+                 <span style={{ fontSize: 10, color: '#52525b' }}>tracked</span>
               </div>
            ))}
         </div>

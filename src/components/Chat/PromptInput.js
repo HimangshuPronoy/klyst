@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
-export default function PromptInput() {
+export default function PromptInput({ onSubmit }) {
   const [prompt, setPrompt] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const fileInputRef = useRef(null);
 
   return (
     <div style={{ width: '100%', maxWidth: 896, margin: '0 auto', padding: 16 }}>
@@ -23,7 +24,8 @@ export default function PromptInput() {
       }}>
         
         {/* Attachment Button */}
-        <button style={{
+        <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*,video/*" onChange={e => { /* File selected: */ console.log('Attached:', e.target.files[0]?.name); }} />
+        <button onClick={() => fileInputRef.current?.click()} style={{
           padding: 12, color: '#a1a1aa', borderRadius: 16, backgroundColor: 'transparent',
           border: 'none', cursor: 'pointer', flexShrink: 0, marginBottom: 4, transition: 'all 0.2s'
         }} onMouseOver={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; }} onMouseOut={e => { e.currentTarget.style.color = '#a1a1aa'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
@@ -47,6 +49,7 @@ export default function PromptInput() {
 
         {/* Submit Button */}
         <button 
+          onClick={() => { if (prompt.trim() && onSubmit) { onSubmit(prompt.trim()); setPrompt(''); } }}
           style={{
             padding: 12, flexShrink: 0, borderRadius: 16, marginBottom: 4, border: 'none',
             transition: 'all 0.2s',

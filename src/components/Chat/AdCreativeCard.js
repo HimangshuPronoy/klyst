@@ -28,8 +28,7 @@ export default function AdCreativeCard({ title, hook, text, visual, cta }) {
           <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{title || 'Ad Creative Concept'}</span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#a1a1aa', border: 'none', borderRadius: 4, padding: '4px 8px', fontSize: 12, cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#fff'} onMouseOut={e => e.currentTarget.style.color = '#a1a1aa'}>Copy</button>
-          <button style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#a1a1aa', border: 'none', borderRadius: 4, padding: '4px 8px', fontSize: 12, cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#fff'} onMouseOut={e => e.currentTarget.style.color = '#a1a1aa'}>Edit</button>
+          <button onClick={() => { const content = `Hook: ${hook || ''}\nPrimary Text: ${text || ''}\nVisual: ${visual || ''}\nCTA: ${cta || 'Shop Now'}`; navigator.clipboard.writeText(content); }} style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#a1a1aa', border: 'none', borderRadius: 4, padding: '4px 8px', fontSize: 12, cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#fff'} onMouseOut={e => e.currentTarget.style.color = '#a1a1aa'}>Copy</button>
         </div>
       </div>
       
@@ -65,8 +64,7 @@ export default function AdCreativeCard({ title, hook, text, visual, cta }) {
       </div>
       
       <div style={{ backgroundColor: '#111', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: 12 }}>
-        <button style={{ flex: 1, fontSize: 14, backgroundColor: '#ea580c', color: '#fff', padding: '8px 0', borderRadius: 8, border: 'none', cursor: 'pointer', transition: 'background-color 0.2s', fontWeight: 500 }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#f97316'} onMouseOut={e => e.currentTarget.style.backgroundColor = '#ea580c'}>Export to Meta Ads</button>
-        <button style={{ flex: 1, fontSize: 14, backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff', padding: '8px 0', borderRadius: 8, border: 'none', cursor: 'pointer', transition: 'background-color 0.2s', fontWeight: 500 }} onMouseOver={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}>Generate Variations</button>
+        <button onClick={() => { const content = `Hook: ${hook || ''}\nPrimary Text: ${text || ''}\nVisual: ${visual || ''}\nCTA: ${cta || 'Shop Now'}`; navigator.clipboard.writeText(content); alert('Ad creative copied — ready to paste into Meta Ads Manager.'); }} style={{ flex: 1, fontSize: 14, backgroundColor: '#ea580c', color: '#fff', padding: '8px 0', borderRadius: 8, border: 'none', cursor: 'pointer', transition: 'background-color 0.2s', fontWeight: 500 }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#f97316'} onMouseOut={e => e.currentTarget.style.backgroundColor = '#ea580c'}>Export to Clipboard</button>
       </div>
     </div>
   );
