@@ -1,15 +1,8 @@
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize OpenAI client (requires OPENAI_API_KEY in .env)
-// We wrap this in a try-catch so the app doesn't crash if the key is missing during UI development.
-let openai;
-try {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-} catch (e) {
-  console.warn("OpenAI API Key missing. Remix endpoint will return mock data.");
-}
+const genAI = process.env.GEMINI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+  : null;
 
 export async function POST(req) {
   try {
@@ -23,7 +16,7 @@ export async function POST(req) {
     }
 
     // If no API key is present, simulate the AI response for frontend testing
-    if (!openai) {
+    if (!genAI) {
       console.log(`[API] Simulating LLM Remix for prompt: "${prompt}"`);
       await new Promise(resolve => setTimeout(resolve, 2000));
       return new Response(JSON.stringify({ 
@@ -35,9 +28,16 @@ export async function POST(req) {
       });
     }
 
-    // Actual OpenAI Integration (Phase 5)
-    console.log(`[API] Calling OpenAI for remix...`);
+    console.log(`[API] Calling Gemini for remix...`);
     
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 500,
+      },
+    });
+
     const systemInstruction = `You are a world-class performance marketing AI. 
     You are analyzing a highly successful video ad from the brand "${adData.brand}". 
     The original successful hook was: "${adData.hook}".
@@ -46,19 +46,11 @@ export async function POST(req) {
     Apply the psychological principles of the original hook to the user's specific request.
     Output a short, punchy, direct-response video script (Hook, Body, CTA).`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemInstruction },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 500,
-    });
+    const result = await model.generateContent(`${systemInstruction}\n\nUser request: ${prompt}`);
 
     return new Response(JSON.stringify({ 
       role: 'system',
-      content: completion.choices[0].message.content
+      content: result.response.text()
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
