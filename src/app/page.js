@@ -279,7 +279,7 @@ export default function PremiumLanding() {
             }}
             onMouseOver={e => { e.currentTarget.style.background = '#f97316'; e.currentTarget.style.borderColor = '#f97316'; e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.4)'; }}
             onMouseOut={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.boxShadow = 'none'; }}>
-              Request Access
+              Start Free Trial
             </Link>
           </div>
         </div>
@@ -327,7 +327,7 @@ export default function PremiumLanding() {
           }}
           onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
           onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
-            Start Your Free Trial
+            Start Free Trial
           </Link>
           <a href="#platform" style={{
             display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, fontWeight: 500,
@@ -619,7 +619,7 @@ export default function PremiumLanding() {
                 color: '#fff', fontSize: 13, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
                 textDecoration: 'none', transition: 'all 0.2s', boxShadow: '0 10px 30px rgba(124, 58, 237, 0.3)'
               }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                Apply for Access
+                Start Free Trial
               </Link>
             </div>
 
