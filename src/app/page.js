@@ -230,7 +230,7 @@ export default function PremiumLanding() {
         <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '60vw', height: '60vh', background: 'radial-gradient(circle, rgba(124,58,237,0.06) 0%, rgba(0,0,0,0) 70%)', pointerEvents: 'none' }} />
         
         {/* The global background 3D scene */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6, pointerEvents: 'none', zIndex: -1 }}>
           <Canvas camera={{ position: [0, 0, 15], fov: 60 }} gl={{ alpha: true, antialias: false }}>
              <FloatingBackground />
           </Canvas>
@@ -239,13 +239,15 @@ export default function PremiumLanding() {
 
       {/* Navbar */}
       <nav style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        background: 'rgba(3, 3, 3, 0.6)', backdropFilter: 'blur(24px)',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        position: 'fixed', top: 20, left: 0, right: 0, zIndex: 100,
+        display: 'flex', justifyContent: 'center'
       }}>
         <div style={{
-          maxWidth: 1200, margin: '0 auto', padding: '0 32px',
-          height: 80, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          width: 'calc(100% - 64px)', maxWidth: 1200, padding: '0 24px',
+          height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'rgba(10, 10, 10, 0.4)', backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.05)', borderRadius: 100,
+          boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
@@ -319,11 +321,12 @@ export default function PremiumLanding() {
         </motion.p>
 
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.6 }}
-          style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 24, position: 'relative', zIndex: 10 }}>
           <Link href="/auth/signup" style={{
             padding: '16px 36px', borderRadius: 100, fontWeight: 600, fontSize: 15,
             background: '#fff', color: '#030303', textDecoration: 'none',
             boxShadow: '0 0 40px rgba(255,255,255,0.1)', transition: 'all 0.3s',
+            position: 'relative', zIndex: 50
           }}
           onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
           onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
