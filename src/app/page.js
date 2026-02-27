@@ -594,7 +594,7 @@ export default function PremiumLanding() {
               <div style={{ position: 'absolute', top: -1, left: '20%', right: '20%', height: 1, background: 'linear-gradient(90deg, transparent, #7c3aed, transparent)' }} />
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                <h3 className={playfair.className} style={{ fontSize: 36, color: '#fff', fontWeight: 500 }}>Scale</h3>
+                <h3 className={playfair.className} style={{ fontSize: 36, color: '#fff', fontWeight: 500 }}>Sovereignty</h3>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="#7c3aed"><path d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z"/></svg>
               </div>
               <p style={{ fontSize: 14, color: '#7c3aed', marginBottom: 32, fontWeight: 500 }}>Agency and enterprise suite.</p>
