@@ -225,7 +225,7 @@ export default function PremiumLanding() {
     }}>
       
       {/* Background Glows and Fullscreen 3D Canvas */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, background: '#030303' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, background: '#030303', pointerEvents: 'none' }}>
         <div style={{ position: 'absolute', top: '-20%', left: '50%', transform: 'translateX(-50%)', width: '80vw', height: '60vh', background: 'radial-gradient(circle, rgba(249,115,22,0.08) 0%, rgba(0,0,0,0) 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '60vw', height: '60vh', background: 'radial-gradient(circle, rgba(124,58,237,0.06) 0%, rgba(0,0,0,0) 70%)', pointerEvents: 'none' }} />
         
