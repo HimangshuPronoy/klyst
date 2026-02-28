@@ -37,8 +37,7 @@ export default function DashboardPage() {
 
   const selectedAd = ads.find(ad => ad.id === selectedAdId);
 
-  const handleScan = async (e) => {
-    e.preventDefault();
+  const runScrape = async () => {
     if (!scanUrl.trim()) return;
     
     setIsScanning(true);
@@ -69,6 +68,11 @@ export default function DashboardPage() {
     } finally {
        setIsScanning(false);
     }
+  };
+
+  const handleScan = async (e) => {
+    e.preventDefault();
+    await runScrape();
   };
 
   return (
@@ -142,20 +146,30 @@ export default function DashboardPage() {
             
             <div style={{ display: 'flex', gap: 12 }}>
                <input 
-                 type="url" 
+                 type="text" 
                  placeholder="Paste a new competitor URL to scrape..." 
                  value={scanUrl}
                  onChange={e => setScanUrl(e.target.value)}
+                 onKeyDown={e => e.key === 'Enter' && runScrape()}
+                 disabled={isScanning}
                  style={{
                    width: 320, padding: '10px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)',
                    backgroundColor: 'rgba(255,255,255,0.03)', color: '#fff', fontSize: 13, outline: 'none'
                  }} 
                />
-               <button onClick={handleScan} style={{
+               <button onClick={runScrape} disabled={isScanning || !scanUrl.trim()} style={{
                  padding: '10px 20px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                 borderRadius: 12, color: '#fff', fontWeight: 500, cursor: 'pointer', transition: 'background 0.2s'
-               }} onMouseOver={e => e.currentTarget.style.backgroundColor='rgba(255,255,255,0.1)'} onMouseOut={e => e.currentTarget.style.backgroundColor='rgba(255,255,255,0.05)'}>
-                 New Scrape
+                 borderRadius: 12, color: '#fff', fontWeight: 500,
+                 cursor: isScanning || !scanUrl.trim() ? 'not-allowed' : 'pointer',
+                 transition: 'background 0.2s', opacity: isScanning || !scanUrl.trim() ? 0.5 : 1,
+                 display: 'flex', alignItems: 'center', gap: 7
+               }} onMouseOver={e => { if (!isScanning && scanUrl.trim()) e.currentTarget.style.backgroundColor='rgba(255,255,255,0.1)'; }} onMouseOut={e => e.currentTarget.style.backgroundColor='rgba(255,255,255,0.05)'}>
+                 {isScanning ? (
+                   <>
+                     <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }}><line x1='12' y1='2' x2='12' y2='6'/><line x1='12' y1='18' x2='12' y2='22'/><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'/><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'/><line x1='2' y1='12' x2='6' y2='12'/><line x1='18' y1='12' x2='22' y2='12'/><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'/><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'/></svg>
+                     Scraping...
+                   </>
+                 ) : 'New Scrape'}
                </button>
             </div>
           </div>

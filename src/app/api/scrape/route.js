@@ -1,6 +1,8 @@
 import { createClient } from '@/utils/supabase/server';
 import { ApifyClient } from 'apify-client';
 
+export const maxDuration = 300; // Allow up to 5 minutes for the Apify actor to finish
+
 export async function POST(req) {
   try {
     const { url } = await req.json();
@@ -12,93 +14,98 @@ export async function POST(req) {
       });
     }
 
-    console.log(`[API] Initiating Apify scrape for: ${url}`);
-
     // Initialize Server Client
     const supabase = await createClient();
-    
+
     // Get active user session for RLS insertion
     const { data: { user } } = await supabase.auth.getUser();
-
     if (!user) {
       return new Response(JSON.stringify({ error: 'Unauthorized: No active session' }), {
         status: 401, headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    // ----------------------------------------------------
-    // APIFY SCRAPING LOGIC
-    // ----------------------------------------------------
-    let scrapedAdsToInsert = [];
-
     if (!process.env.APIFY_API_TOKEN) {
-       throw new Error('APIFY_API_TOKEN is missing from environment variables.');
+      throw new Error('APIFY_API_TOKEN is missing from environment variables.');
     }
 
+    // Extract brand keyword from URL (e.g. "lumina-skincare.com" -> "lumina skincare")
+    let rawUrl = url.trim();
+    const hostname = new URL(rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`).hostname;
+    const brandKeyword = hostname.replace('www.', '').split('.')[0].replace(/-/g, ' ');
+
+    console.log(`[API] Scraping Meta Ad Library for brand keyword: "${brandKeyword}"`);
+
+    // Build a Meta Ad Library search URL — this is what the actor expects as input
+    const adLibraryUrl = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&is_targeted_country=false&media_type=all&q=${encodeURIComponent(brandKeyword)}&search_type=keyword_unordered`;
+
+    const apifyClient = new ApifyClient({ token: process.env.APIFY_API_TOKEN });
+
+    let scrapedAdsToInsert = [];
+
     try {
-      // Initialize the ApifyClient with API token
-      const apifyClient = new ApifyClient({
-        token: process.env.APIFY_API_TOKEN,
-      });
-
-      // Simple heuristic to extract a search term from a URL
-      // e.g. "https://juneshine.com/products" -> "juneshine"
-      const hostname = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
-      const brandKeyword = hostname.replace('www.', '').split('.')[0]; 
-
-      console.log(`[API] Starting Apify Actor for Keyword: ${brandKeyword}`);
-
-      // You can use standard Apify actors. 'curious_coder/facebook-ads-library-scraper' is a common one.
-      // Or 'apify/facebook-ads-scraper' 
-      const actorId = 'apify/facebook-ads-scraper'; 
-      
       const input = {
-          searchTerms: [brandKeyword],
-          country: "ALL", 
-          maxItems: 3, // Keep the limit small for real-time dashboard responsiveness
+        startUrls: [{ url: adLibraryUrl }],
+        maxItems: 5,
+        scrapeAdDetails: false, // Faster without deep detail scraping
       };
 
-      // Run the Actor and wait for it to finish
-      const run = await apifyClient.actor(actorId).call(input);
+      console.log(`[API] Calling Apify actor with URL: ${adLibraryUrl}`);
 
-      // Fetch and process Actor results from the run's dataset
+      const run = await apifyClient.actor('apify/facebook-ads-scraper').call(input, {
+        timeout: 240, // 4 minute timeout passed to Apify task
+      });
+
       const { items } = await apifyClient.dataset(run.defaultDatasetId).listItems();
 
       console.log(`[API] Apify returned ${items.length} ads.`);
 
       if (items && items.length > 0) {
-         scrapedAdsToInsert = items.map((ad, idx) => ({
-            user_id: user.id,
-            brand: ad.pageName || brandKeyword,
-            original_url: url,
-            hook_text: (ad.adText || 'No text content available').substring(0, 500),
-            spend_estimate: ad.spend ? `$${ad.spend.lower_bound}-$${ad.spend.upper_bound}` : 'Unknown',
-            days_active: ad.startDate ? Math.floor((new Date() - new Date(ad.startDate)) / (1000 * 60 * 60 * 24)) : 0,
-            format: ad.snapshot && ad.snapshot.videos && ad.snapshot.videos.length > 0 ? 'Video Ad' : 'Image Ad',
-            image_url: (ad.snapshot && ad.snapshot.images && ad.snapshot.images[0]?.url) || 
-                       (ad.snapshot && ad.snapshot.videos && ad.snapshot.videos[0]?.video_preview_image_url) ||
-                       'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=600&auto=format&fit=crop', // fallback
-            visual_dna: []
-         }));
-      }
-
-    } catch (scrapeErr) {
-       console.error(`[API Scraper] Apify Actor failed:`, scrapeErr);
-       // If apify fails, push a fallback error ad so the UI doesn't crash completely.
-       scrapedAdsToInsert.push({
+        scrapedAdsToInsert = items.map((ad) => ({
           user_id: user.id,
-          brand: 'Scrape Failed',
-          original_url: url,
-          hook_text: `Error connecting to Meta Ads via Apify: ${scrapeErr.message}`,
-          spend_estimate: 'N/A',
-          days_active: 0,
-          format: 'Error',
-          image_url: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=600&auto=format&fit=crop',
-          visual_dna: []
-       });
+          brand: ad.pageName || ad.page_name || brandKeyword,
+          original_url: rawUrl,
+          hook_text: (
+            ad.adText ||
+            ad.ad_text ||
+            (ad.snapshot && ad.snapshot.body && ad.snapshot.body.markup && ad.snapshot.body.markup.__html) ||
+            'No text content available'
+          ).substring(0, 500),
+          spend_estimate: ad.spend
+            ? `$${ad.spend.lower_bound ?? 0}–$${ad.spend.upper_bound ?? '?'}`
+            : 'Unknown',
+          days_active: ad.startDate
+            ? Math.floor((Date.now() - new Date(ad.startDate).getTime()) / 86400000)
+            : 0,
+          format:
+            ad.snapshot && ad.snapshot.videos && ad.snapshot.videos.length > 0
+              ? 'Video Ad'
+              : 'Image Ad',
+          image_url:
+            (ad.snapshot && ad.snapshot.images && ad.snapshot.images[0]?.url) ||
+            (ad.snapshot && ad.snapshot.videos && ad.snapshot.videos[0]?.video_preview_image_url) ||
+            'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=600&auto=format&fit=crop',
+          visual_dna: [],
+        }));
+      }
+    } catch (scrapeErr) {
+      console.error('[API Scraper] Apify Actor failed:', scrapeErr);
+      // Push a graceful error record so it doesn't silently fail
+      scrapedAdsToInsert.push({
+        user_id: user.id,
+        brand: `${brandKeyword} (Error)`,
+        original_url: rawUrl,
+        hook_text: `Apify scrape error: ${scrapeErr.message}`,
+        spend_estimate: 'N/A',
+        days_active: 0,
+        format: 'Error',
+        image_url:
+          'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=600&auto=format&fit=crop',
+        visual_dna: [],
+      });
     }
 
-    // Insert to Supabase DB (ensure we only insert if we have items)
+    // Insert results to Supabase
     let insertedAds = [];
     if (scrapedAdsToInsert.length > 0) {
       const { data, error } = await supabase
@@ -107,25 +114,21 @@ export async function POST(req) {
         .select();
 
       if (error) {
-        console.error("Database Insert Error:", error);
+        console.error('Database Insert Error:', error);
         throw error;
       }
       insertedAds = data;
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      scrapedAds: insertedAds
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-    
+    return new Response(
+      JSON.stringify({ success: true, scrapedAds: insertedAds }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Scrape API Error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to process scrape request: ' + error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ error: 'Failed to process scrape request: ' + error.message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
