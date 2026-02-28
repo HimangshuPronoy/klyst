@@ -231,7 +231,7 @@ export default function PremiumLanding() {
         
         {/* The global background 3D scene */}
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.6, pointerEvents: 'none', zIndex: -1 }}>
-          <Canvas camera={{ position: [0, 0, 15], fov: 60 }} gl={{ alpha: true, antialias: false }}>
+          <Canvas camera={{ position: [0, 0, 15], fov: 60 }} gl={{ alpha: true, antialias: false }} style={{ pointerEvents: 'none' }}>
              <FloatingBackground />
           </Canvas>
         </div>
@@ -354,7 +354,7 @@ export default function PremiumLanding() {
           
           {/* Real 3D Canvas bridging the hero */}
           <div style={{ position: 'absolute', top: -150, left: 0, right: 0, height: 800, zIndex: -1, pointerEvents: 'none', opacity: 0.8 }}>
-            <Canvas camera={{ position: [0, 0, 7], fov: 45 }}>
+            <Canvas camera={{ position: [0, 0, 7], fov: 45 }} style={{ pointerEvents: 'none' }}>
               <HeroCore />
             </Canvas>
           </div>
