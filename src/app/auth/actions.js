@@ -19,7 +19,7 @@ export async function login(formData) {
     redirect(`/auth/login?error=${encodeURIComponent(error.message)}`)
   }
 
-  revalidatePath('/', 'layout')
+  revalidatePath('/dashboard', 'page')
   redirect('/dashboard')
 }
 
@@ -43,13 +43,12 @@ export async function signup(formData) {
     redirect('/auth/login?error=' + encodeURIComponent('Check your email to confirm your account before logging in.'))
   }
 
-  revalidatePath('/', 'layout')
+  revalidatePath('/dashboard', 'page')
   redirect('/dashboard')
 }
 
 export async function signout() {
   const supabase = await createClient()
   await supabase.auth.signOut()
-  revalidatePath('/', 'layout')
   redirect('/auth/login')
 }
