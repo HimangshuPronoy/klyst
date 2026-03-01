@@ -37,11 +37,65 @@ export default function DashboardPage() {
 
   const selectedAd = ads.find(ad => ad.id === selectedAdId);
 
+  const [scrapeProgress, setScrapeProgress] = useState('');
+
+  const pollScrapeStatus = async (runId, brand, url) => {
+    const maxAttempts = 120; // ~10 minutes at 5s intervals
+    for (let i = 0; i < maxAttempts; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+
+      const elapsed = ((i + 1) * 5);
+      const mins = Math.floor(elapsed / 60);
+      const secs = elapsed % 60;
+      setScrapeProgress(
+        mins > 0 
+          ? `Scraping Meta Ad Library… ${mins}m ${secs}s` 
+          : `Scraping Meta Ad Library… ${secs}s`
+      );
+
+      try {
+        const res = await fetch(
+          `/api/scrape/status?runId=${runId}&brand=${encodeURIComponent(brand)}&url=${encodeURIComponent(url)}`
+        );
+        const data = await res.json();
+
+        if (data.status === 'running') continue;
+
+        if (data.status === 'done') {
+          if (data.scrapedAds?.length > 0) {
+            setAds(prev => [...data.scrapedAds, ...prev]);
+            setHasScanned(true);
+            setScanUrl('');
+          } else {
+            setErrorMsg(data.message || 'No ads found for this brand.');
+          }
+          return;
+        }
+
+        if (data.status === 'failed') {
+          setErrorMsg(data.error || 'Scrape failed. Please try again.');
+          return;
+        }
+
+        // Unknown status or API error
+        if (!res.ok) {
+          setErrorMsg(data.error || 'Status check failed.');
+          return;
+        }
+      } catch (err) {
+        console.error('Poll error:', err);
+        // Network blip — keep trying
+      }
+    }
+    setErrorMsg('Scrape is taking too long. Please try again later.');
+  };
+
   const runScrape = async () => {
     if (!scanUrl.trim()) return;
     
     setIsScanning(true);
     setErrorMsg('');
+    setScrapeProgress('Starting scrape…');
     
     try {
       const res = await fetch('/api/scrape', {
@@ -56,17 +110,16 @@ export default function DashboardPage() {
         return;
       }
       
-      if (data.success && data.scrapedAds) {
-        // Optimistically update UI
-        setAds(prev => [...data.scrapedAds, ...prev]);
-        setHasScanned(true);
-        setScanUrl('');
+      if (data.success && data.runId) {
+        // Poll for results
+        await pollScrapeStatus(data.runId, data.brandKeyword, data.originalUrl);
       }
     } catch (error) {
        console.error("Error running scrape:", error);
        setErrorMsg('Network error — could not reach the server.');
     } finally {
        setIsScanning(false);
+       setScrapeProgress('');
     }
   };
 
@@ -129,7 +182,7 @@ export default function DashboardPage() {
                {isScanning ? (
                  <>
                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
-                   Extracting Data...
+                   {scrapeProgress || 'Starting…'}
                  </>
                ) : 'Run Scrape'}
              </button>
@@ -167,7 +220,7 @@ export default function DashboardPage() {
                  {isScanning ? (
                    <>
                      <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }}><line x1='12' y1='2' x2='12' y2='6'/><line x1='12' y1='18' x2='12' y2='22'/><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'/><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'/><line x1='2' y1='12' x2='6' y2='12'/><line x1='18' y1='12' x2='22' y2='12'/><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'/><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'/></svg>
-                     Scraping...
+                     {scrapeProgress || 'Scraping…'}
                    </>
                  ) : 'New Scrape'}
                </button>
